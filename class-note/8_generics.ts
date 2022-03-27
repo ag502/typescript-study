@@ -42,6 +42,6 @@ function logText<T>(text: T): T {
 }
 
 const str = logText<string>("a");
-str.split("");
+// str.split("");
 
 const login = logText<boolean>(true);
