@@ -5,7 +5,8 @@
     "lib": ["ES2015", "DOM", "DOM.Iterable"],
     "outDir": "./built",
     "moduleResolution": "Node",
-    "noImplicitAny": true
+    "noImplicitAny": true,
+    "typeRoots": ["./node_modules/@types", "./types"]
   },
   "include": ["./src/**/*"]
 }
