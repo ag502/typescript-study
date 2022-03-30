@@ -9,8 +9,9 @@ import {
 } from './covid';
 
 // utils
-function $(selector: string) {
-  return document.querySelector(selector);
+function $<T extends HTMLElement>(selector: string) {
+  const element = document.querySelector(selector);
+  return element as T;
 }
 function getUnixTimestamp(date: string | number | Date) {
   return new Date(date).getTime();
@@ -18,12 +19,12 @@ function getUnixTimestamp(date: string | number | Date) {
 
 // DOM
 const confirmedTotal = $('.confirmed-total') as HTMLSpanElement;
-const deathsTotal = $('.deaths') as HTMLParagraphElement;
-const recoveredTotal = $('.recovered') as HTMLOListElement;
-const lastUpdatedTime = $('.last-updated-time') as HTMLParagraphElement;
-const rankList = $('.rank-list');
-const deathsList = $('.deaths-list');
-const recoveredList = $('.recovered-list');
+const deathsTotal = $<HTMLParagraphElement>('.deaths');
+const recoveredTotal = $<HTMLOListElement>('.recovered');
+const lastUpdatedTime = $<HTMLParagraphElement>('.last-updated-time');
+const rankList = $<HTMLOListElement>('.rank-list');
+const deathsList = $<HTMLOListElement>('.deaths-list');
+const recoveredList = $<HTMLOListElement>('.recovered-list');
 const deathSpinner = createSpinnerElement('deaths-spinner');
 const recoveredSpinner = createSpinnerElement('recovered-spinner');
 
@@ -59,7 +60,7 @@ enum CovidStatus {
 }
 
 function fetchCountryInfo(
-  countryName: string,
+  countryName: string | undefined,
   status: CovidStatus
 ): Promise<AxiosResponse<CountrySummaryResponse>> {
   // params: confirmed, recovered, deaths
@@ -75,16 +76,21 @@ function startApp() {
 
 // events
 function initEvents() {
+  if (!rankList) {
+    return;
+  }
   rankList.addEventListener('click', handleListClick);
 }
 
-async function handleListClick(event: MouseEvent) {
+async function handleListClick(event: Event) {
   let selectedId;
   if (
     event.target instanceof HTMLParagraphElement ||
     event.target instanceof HTMLSpanElement
   ) {
-    selectedId = event.target.parentElement.id;
+    selectedId = event.target.parentElement
+      ? event.target.parentElement.id
+      : undefined;
   }
   if (event.target instanceof HTMLLIElement) {
     selectedId = event.target.id;
@@ -132,12 +138,15 @@ function setDeathsList(data: CountrySummaryResponse) {
     p.textContent = new Date(value.Date).toLocaleDateString().slice(0, -1);
     li.appendChild(span);
     li.appendChild(p);
-    deathsList.appendChild(li);
+    deathsList?.appendChild(li);
   });
 }
 
 function clearDeathList() {
-  deathsList.innerHTML = null;
+  if (!deathsList) {
+    return;
+  }
+  deathsList.innerHTML = '';
 }
 
 function setTotalDeathsByCountry(data: CountrySummaryResponse) {
@@ -159,12 +168,15 @@ function setRecoveredList(data: CountrySummaryResponse) {
     p.textContent = new Date(value.Date).toLocaleDateString().slice(0, -1);
     li.appendChild(span);
     li.appendChild(p);
-    recoveredList.appendChild(li);
+    recoveredList?.appendChild(li);
   });
 }
 
 function clearRecoveredList() {
-  recoveredList.innerHTML = null;
+  if (!recoveredList) {
+    return;
+  }
+  recoveredList.innerHTML = '';
 }
 
 function setTotalRecoveredByCountry(data: CountrySummaryResponse) {
@@ -172,13 +184,13 @@ function setTotalRecoveredByCountry(data: CountrySummaryResponse) {
 }
 
 function startLoadingAnimation() {
-  deathsList.appendChild(deathSpinner);
-  recoveredList.appendChild(recoveredSpinner);
+  deathsList?.appendChild(deathSpinner);
+  recoveredList?.appendChild(recoveredSpinner);
 }
 
 function endLoadingAnimation() {
-  deathsList.removeChild(deathSpinner);
-  recoveredList.removeChild(recoveredSpinner);
+  deathsList?.removeChild(deathSpinner);
+  recoveredList?.removeChild(recoveredSpinner);
 }
 
 async function setupData() {
@@ -190,8 +202,9 @@ async function setupData() {
   setLastUpdatedTimestamp(data);
 }
 
-function renderChart(data: any, labels: any) {
-  const ctx = $('#lineChart').getContext('2d');
+function renderChart(data: number[], labels: string[]) {
+  const lineCharrt = $('#lineChart') as HTMLCanvasElement;
+  const ctx = lineCharrt.getContext('2d');
   Chart.defaults.color = '#f5eaea';
   // Chart.defaults.font.family = "Exo 2";
   new Chart(ctx, {
