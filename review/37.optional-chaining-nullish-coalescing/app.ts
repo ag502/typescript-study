@@ -5,3 +5,10 @@ const fetchedUserData = {
 };
 
 console.log(fetchedUserData?.job?.title);
+
+const userInput = "";
+
+// really null and undefined
+const storedData = userInput ?? "DEFAULT";
+
+console.log(storedData);
